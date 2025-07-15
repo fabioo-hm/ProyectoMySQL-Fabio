@@ -129,7 +129,6 @@ CREATE TABLE IF NOT EXISTS companies (
     name VARCHAR(80) NOT NULL,
     category_id INT NOT NULL,
     CONSTRAINT FK_category_idcompa FOREIGN KEY (category_id) REFERENCES categories(id),
-    address VARCHAR(80) NOT NULL,
     city_id VARCHAR(6) NOT NULL,
     CONSTRAINT FK_city_idcompa FOREIGN KEY (city_id) REFERENCES citiesormunicipalities(code),
     audience_id INT NOT NULL,
