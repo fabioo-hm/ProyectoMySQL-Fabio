@@ -166,7 +166,8 @@ CREATE TABLE IF NOT EXISTS customers (
     audience_id INT NOT NULL,
     CONSTRAINT FK_audience_idcustomers FOREIGN KEY (audience_id) REFERENCES audiences(id),
     cellphone VARCHAR(15) UNIQUE NOT NULL,
-    email VARCHAR(80) UNIQUE NOT NULL
+    email VARCHAR(80) UNIQUE NOT NULL,
+    membership_active BOOLEAN NOT NULL
 ) ENGINE = INNODB;
 
 CREATE TABLE IF NOT EXISTS products (
