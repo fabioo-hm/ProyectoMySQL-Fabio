@@ -109,6 +109,13 @@
 
 7. Como desarrollador, deseo listar las ciudades que no tienen clientes registrados.
 ```sql
+SELECT c.name
+FROM citiesormunicipalities c
+WHERE NOT EXISTS (
+    SELECT cu.city_id
+    FROM customers cu
+    WHERE cu.city_id = c.code
+);
 ```
 
 8. Como administrador, quiero ver los productos que no han sido evaluados en ninguna encuesta.
