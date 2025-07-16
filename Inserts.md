@@ -1550,10 +1550,10 @@ INSERT INTO membershipbenefits (membership_id, period_id, benefit_id, audience_i
 (1, 2, 2, 2),
 (2, 1, 3, 3);
 
-INSERT INTO companies (id, type_id, name, category_id, city_id, audience_id, cellphone, email) VALUES
-('COMP1', 1, 'Supermercado XYZ', 2, '05001', 1, '3101234567', 'xyz@empresa.com'),
-('COMP2', 3, 'Tech Solutions', 3, 'US36001', 2, '3207654321', 'tech@soluciones.com'),
-('COMP3', 1, 'Restaurante Gourmet', 1, '11001', 3, '3158889999', 'gourmet@restaurante.com');
+INSERT INTO companies (id, type_id, name, category_id, city_id, audience_id, cellphone, email, is_active) VALUES
+('COMP1', 1, 'Supermercado XYZ', 2, '05001', 1, '3101234567', 'xyz@empresa.com', 1),
+('COMP2', 3, 'Tech Solutions', 3, 'US36001', 2, '3207654321', 'tech@soluciones.com', 1),
+('COMP3', 1, 'Restaurante Gourmet', 1, '11001', 3, '3158889999', 'gourmet@restaurante.com', 0);
 
 INSERT INTO products (name, detail, price, category_id, image) VALUES
 ('Arroz Premium', 'Arroz de grano largo premium', 25000, 2, 'arroz.jpg'),
@@ -1561,16 +1561,16 @@ INSERT INTO products (name, detail, price, category_id, image) VALUES
 ('Bandeja Paisa', 'Plato típico antioqueño', 35000, 1, 'paisa.jpg'),
 ('Leche Entera', 'Leche fresca de vaca', 5000, 2, 'leche.jpg');
 
-INSERT INTO companyproducts (company_id, product_id, price, unitmeasure_id) VALUES
-('COMP1', 1, 24000, 1),
-('COMP1', 4, 4800, 1),
-('COMP2', 2, 1490000, 1),
-('COMP3', 3, 32000, 1);
+INSERT INTO companyproducts (company_id, product_id, price, unitmeasure_id, is_available) VALUES
+('COMP1', 1, 24000, 1, 1),
+('COMP1', 4, 4800, 1, 0),
+('COMP2', 2, 1490000, 1, 1),
+('COMP3', 3, 32000, 1, 0);
 
-INSERT INTO customers (name, city_id, audience_id, cellphone, email, membership_active) VALUES
-('Juan Pérez', '05001', 1, '3001112233', 'juan@mail.com', 1),
-('María Gómez', '11001', 2, '3104445566', 'maria@mail.com', 0),
-('John Doe', 'US36001', 3, '15551234567', 'john@mail.com', 1);
+INSERT INTO customers (name, city_id, audience_id, cellphone, email, membership_active, is_active) VALUES
+('Juan Pérez', '05001', 1, '3001112233', 'juan@mail.com', 1, 1),
+('María Gómez', '11001', 2, '3104445566', 'maria@mail.com', 0, 0),
+('John Doe', 'US36001', 3, '15551234567', 'john@mail.com', 1, 1);
 
 INSERT INTO quality_products (product_id, customer_id, poll_id, company_id, daterating, rating) VALUES
 (1, 1, 2, 'COMP1', NOW(), 4.5),
