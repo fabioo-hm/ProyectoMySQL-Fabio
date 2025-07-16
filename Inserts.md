@@ -3,12 +3,18 @@
 INSERT INTO categories_polls (name) VALUES 
 ('Satisfacción Cliente'),
 ('Calidad Productos'),
-('Experiencia Usuario');
+('Experiencia Usuario'),
+('Experiencia de Compra'),
+('Servicio Postventa'),
+('Sostenibilidad');
 
-INSERT INTO polls (name, description, isactive, categorypoll_id) VALUES
-('Encuesta Restaurante', 'Opinión sobre servicio en restaurantes', 1, 1),
-('Calidad Supermercado', 'Evaluación productos de supermercado', 1, 2),
-('App Móvil', 'Experiencia usando nuestra aplicación', 0, 3);
+INSERT INTO polls (name, description, isactive, categorypoll_id, created_at) VALUES
+('Encuesta Restaurante', 'Opinión sobre servicio en restaurantes', 1, 1, '2024-06-15 09:00:00'),
+('Calidad Supermercado', 'Evaluación productos de supermercado', 1, 2, '2024-08-15 09:00:00'),
+('App Móvil', 'Experiencia usando nuestra aplicación', 0, 3, '2024-01-15 09:00:00'),
+('App Delivery', 'Evaluación de apps de comida a domicilio', 1, 3, '2024-01-15 09:00:00'),
+('Calidad Textil', 'Evaluación de materiales en productos textiles', 1, 2, '2024-02-20 14:30:00'),
+('Satisfacción Bancos', 'Experiencia con servicios financieros', 0, 1, '2024-03-10 10:15:00');
 
 INSERT INTO countries (isocode, name, alfaisotwo, alfaisothree) VALUES
 ('4', 'Afganistán', 'AF', 'AFG'),
@@ -1503,42 +1509,69 @@ INSERT INTO citiesormunicipalities (code, name, statereg_id) VALUES
 INSERT INTO categories (description) VALUES
 ('Restaurante'),
 ('Supermercado'),
-('Tecnología');
+('Tecnología'),
+('Tecnología Educativa'),
+('Materiales de Construcción'),
+('Productos Orgánicos');
 
 INSERT INTO audiences (description) VALUES
 ('Adultos'),
 ('Jóvenes'),
-('Tercera Edad');
+('Tercera Edad'),
+('Niños'),
+('Profesionales'),
+('Instituciones');
 
 INSERT INTO typesidentifications (description, sufix) VALUES
 ('NIT', 'NT'),
 ('Tarjeta de Identidad', 'TI'),
 ('Cédula', 'CC'),
-('Pasaporte', 'PSPT');
+('Pasaporte', 'PSPT'),
+('Registro Civil', 'RC'),
+('Permiso Especial', 'PE'),
+('Identificación Extranjera', 'IE');
 
 INSERT INTO memberships (name, description) VALUES
 ('Premium', 'Acceso a todos los beneficios exclusivos'),
-('Básica', 'Membresía inicial con beneficios limitados');
+('Básica', 'Membresía inicial con beneficios limitados'),
+('Gold', 'Acceso premium con beneficios extendidos'),
+('Empresarial', 'Plan corporativo para PYMEs'),
+('Estudiante', 'Descuentos especiales para estudiantes');
 
 INSERT INTO periods (name) VALUES
 ('Mensual'),
 ('Anual'),
-('Trimestral');
+('Trimestral'),
+('Semestral'),
+('Bimestral'),
+('Semanal');
 
-INSERT INTO membershipperiods (membership_id, period_id) VALUES
-(1, 2),
-(2, 1),
-(1, 3);
+INSERT INTO membershipperiods (membership_id, period_id, start_date, end_date) VALUES
+(1, 2, '2024-01-01', '2024-12-31'),
+(2, 1, '2024-01-01', '2024-01-31'),
+(1, 3, '2024-01-01', '2024-03-31');
 
 INSERT INTO benefits (description, detail) VALUES
 ('Descuento 20%', 'En todos los productos seleccionados'),
 ('Envío Gratis', 'Para compras superiores a $100.000'),
 ('Asesoría Premium', 'Soporte prioritario 24/7');
 
+UPDATE benefits SET 
+  value = 1.5,
+  expires_at = '2025-12-31'
+WHERE id IN (1, 2, 3);
+
+INSERT INTO benefits (description, detail, value, expires_at) VALUES
+('Cashback 5%', 'Reembolso en compras recurrentes', 5.0, '2024-12-01'),
+('Garantía Extendida', 'Extensión de garantía de productos', 1.8, '2025-06-30');
+
 INSERT INTO unitofmeasure (description) VALUES
 ('Unidad'),
 ('Libra'),
-('Galón');
+('Galón'),
+('Metro'),
+('Litro'),
+('Paquete');
 
 INSERT INTO audiencebenefits (audience_id, benefit_id) VALUES
 (1, 1),
@@ -1555,11 +1588,19 @@ INSERT INTO companies (id, type_id, name, category_id, city_id, audience_id, cel
 ('COMP2', 3, 'Tech Solutions', 3, 'US36001', 2, '3207654321', 'tech@soluciones.com', 1),
 ('COMP3', 1, 'Restaurante Gourmet', 1, '11001', 3, '3158889999', 'gourmet@restaurante.com', 0);
 
+INSERT INTO companies (id, type_id, name, category_id, city_id, audience_id, cellphone, email, is_active, updated_at) VALUES
+('COMP4', 2, 'TecnoEduca', 4, '11001', 6, '3174445566', 'tecnoseduca@example.com', 1, NOW()),
+('COMP5', 1, 'EcoMateriales', 5, '05001', 5, '3157778888', 'ecomateriales@empresa.com', 1, NOW());
+
 INSERT INTO products (name, detail, price, category_id, image) VALUES
 ('Arroz Premium', 'Arroz de grano largo premium', 25000, 2, 'arroz.jpg'),
 ('Smartphone X', 'Último modelo con 128GB', 1500000, 3, 'phonex.jpg'),
 ('Bandeja Paisa', 'Plato típico antioqueño', 35000, 1, 'paisa.jpg'),
 ('Leche Entera', 'Leche fresca de vaca', 5000, 2, 'leche.jpg');
+
+INSERT INTO products (name, detail, price, category_id, image, average_rating) VALUES
+('Tablet Educativa', 'Tablet con contenido pedagógico', 850000, 4, 'tablet_edu.jpg', 4.7),
+('Pintura Ecológica', 'Pintura libre de tóxicos', 120000, 5, 'pintura_eco.jpg', 4.9);
 
 INSERT INTO companyproducts (company_id, product_id, price, unitmeasure_id, is_available) VALUES
 ('COMP1', 1, 24000, 1, 1),
@@ -1570,7 +1611,14 @@ INSERT INTO companyproducts (company_id, product_id, price, unitmeasure_id, is_a
 INSERT INTO customers (name, city_id, audience_id, cellphone, email, membership_active, is_active) VALUES
 ('Juan Pérez', '05001', 1, '3001112233', 'juan@mail.com', 1, 1),
 ('María Gómez', '11001', 2, '3104445566', 'maria@mail.com', 0, 0),
-('John Doe', 'US36001', 3, '15551234567', 'john@mail.com', 1, 1);
+('John Doe', 'US36001', 3, '15551234567', 'john@mail.com', 1, 1),
+('Ana Rodríguez', '76001', 4, '3209990000', 'ana@mail.com', 1, 1),
+('Carlos Mendoza', 'US06001', 5, '15559876543', 'carlos@empresa.com', 1, 1);
+
+INSERT INTO customers_memberships (customer_id, membership_id) VALUES
+(1, 3),
+(4, 2),
+(5, 1);
 
 INSERT INTO quality_products (product_id, customer_id, poll_id, company_id, daterating, rating) VALUES
 (1, 1, 2, 'COMP1', NOW(), 4.5),
@@ -1592,4 +1640,24 @@ INSERT INTO rates (customer_id, company_id, poll_id, daterating, rating) VALUES
 (1, 'COMP1', 2, NOW(), 4.0),
 (2, 'COMP3', 1, NOW(), 4.5),
 (3, 'COMP2', 1, NOW(), 4.7);
+
+INSERT INTO quality_products (product_id, customer_id, poll_id, company_id, daterating, rating) VALUES
+(4, 4, 2, 'COMP1', '2024-04-10 11:30:00', 4.0), 
+(5, 5, 3, 'COMP4', '2024-04-11 14:45:00', 4.9),
+(6, 1, 3, 'COMP5', '2024-04-12 09:15:00', 4.7); 
+
+INSERT INTO favorites (customer_id, company_id) VALUES
+(4, 'COMP4'),
+(5, 'COMP5'),
+(1, 'COMP3');
+
+INSERT INTO details_favorites (favorite_id, product_id, fecha_agregado) VALUES
+(4, 5, '2024-04-10 16:20:00'),
+(5, 6, '2024-04-11 10:40:00'), 
+(6, 3, '2024-04-12 12:15:00'); 
+
+INSERT INTO rates (customer_id, company_id, poll_id, daterating, rating) VALUES
+(4, 'COMP4', 3, '2024-04-10 17:00:00', 4.8), 
+(5, 'COMP5', 3, '2024-04-11 11:30:00', 4.6), 
+(1, 'COMP3', 1, '2024-04-12 13:45:00', 3.9); 
 ```
