@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS polls (
     description TEXT NOT NULL,
     isactive BOOLEAN NOT NULL,
     categorypoll_id INT NOT NULL,
-    CONSTRAINT FK_categorypoll_idpolls FOREIGN KEY(categorypoll_id) REFERENCES categories_polls(id)
+    CONSTRAINT FK_categorypoll_idpolls FOREIGN KEY(categorypoll_id) REFERENCES categories_polls(id),
+    created_at DATETIME DEFAULT NOW()
 ) ENGINE = INNODB;
 
 CREATE TABLE IF NOT EXISTS countries (
@@ -81,7 +82,8 @@ CREATE TABLE IF NOT EXISTS membershipperiods (
     PRIMARY KEY (membership_id, period_id),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    status VARCHAR(20) DEFAULT 'ACTIVA'
+    status VARCHAR(20) DEFAULT 'ACTIVA',
+    pago_confirmado BOOLEAN DEFAULT FALSE
 ) ENGINE = INNODB;
 
 CREATE TABLE IF NOT EXISTS benefits (
@@ -90,7 +92,8 @@ CREATE TABLE IF NOT EXISTS benefits (
     detail TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     expires_at DATE NULL,
-    is_active BOOLEAN DEFAULT TRUE
+    is_active BOOLEAN DEFAULT TRUE,
+    value DOUBLE NOT NULL DEFAULT 1.0
 ) ENGINE = INNODB;
 
 CREATE TABLE IF NOT EXISTS audiences (
@@ -172,7 +175,7 @@ CREATE TABLE IF NOT EXISTS customers (
     audience_id INT NOT NULL,
     CONSTRAINT FK_audience_idcustomers FOREIGN KEY (audience_id) REFERENCES audiences(id),
     cellphone VARCHAR(15) UNIQUE NOT NULL,
-    email VARCHAR(80) UNIQUE NOT NULL,
+    email VARCHAR(80) UNIQUE,
     membership_active BOOLEAN NOT NULL,
     is_active BOOLEAN NOT NULL
 ) ENGINE = INNODB;
@@ -204,7 +207,8 @@ CREATE TABLE IF NOT EXISTS details_favorites (
     favorite_id INT NOT NULL,
     CONSTRAINT FK_favorite_iddetails FOREIGN KEY (favorite_id) REFERENCES favorites(id),
     product_id INT NOT NULL,
-    CONSTRAINT FK_product_iddetails FOREIGN KEY (product_id) REFERENCES products(id)
+    CONSTRAINT FK_product_iddetails FOREIGN KEY (product_id) REFERENCES products(id),
+    fecha_agregado DATETIME DEFAULT NOW()
 ) ENGINE = INNODB;
 
 CREATE TABLE IF NOT EXISTS rates (
@@ -339,4 +343,36 @@ CREATE TABLE IF NOT EXISTS inflacion_indice (
     fecha_aplicacion DATE NOT NULL
 ) ENGINE = INNODB;
 
+CREATE TABLE IF NOT EXISTS resumen_calificaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id VARCHAR(20) NOT NULL,
+    promedio_calificacion DOUBLE NOT NULL,
+    total_calificaciones INT NOT NULL,
+    mes_resumen DATE NOT NULL,
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+
+CREATE TABLE IF NOT EXISTS poll_questions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  poll_id INT NOT NULL,
+  question_text VARCHAR(255) NOT NULL,
+  CONSTRAINT FK_poll_id_questions FOREIGN KEY (poll_id) REFERENCES polls(id)
+) ENGINE = INNODB;
+
+CREATE TABLE IF NOT EXISTS order_details (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  price DOUBLE NOT NULL,
+  created_at DATETIME DEFAULT NOW(),
+  FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+CREATE TABLE IF NOT EXISTS customers_memberships (
+  customer_id INT NOT NULL,
+  membership_id INT NOT NULL,
+  CONSTRAINT FK_customer_id_cm FOREIGN KEY (customer_id) REFERENCES customers(id),
+  CONSTRAINT FK_membership_id_cm FOREIGN KEY (membership_id) REFERENCES memberships(id),
+  PRIMARY KEY (customer_id, membership_id)
+);
 ```

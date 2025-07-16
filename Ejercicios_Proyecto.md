@@ -604,163 +604,807 @@ WHERE c.membership_active = TRUE
 
 1. Obtener el promedio de calificación por producto
 ```sql
+SELECT 
+    p.name AS producto,
+    AVG(qp.rating) AS promedio_calificacion
+FROM products p
+JOIN quality_products qp ON p.id = qp.product_id
+GROUP BY p.id, p.name
+ORDER BY promedio_calificacion DESC;
 ```
 
 2. Contar cuántos productos ha calificado cada cliente
 ```sql
+SELECT 
+    c.name AS cliente,
+    COUNT(DISTINCT qp.product_id) AS total_productos_calificados
+FROM customers c
+JOIN quality_products qp ON c.id = qp.customer_id
+GROUP BY c.id, c.name
+ORDER BY total_productos_calificados DESC;
 ```
 
 3. Sumar el total de beneficios asignados por audiencia
 ```sql
+SELECT 
+    a.description AS audiencia,
+    COUNT(ab.benefit_id) AS total_beneficios_asignados
+FROM audiences a
+JOIN audiencebenefits ab ON a.id = ab.audience_id
+GROUP BY a.id, a.description
+ORDER BY total_beneficios_asignados DESC;
 ```
 
 4. Calcular la media de productos por empresa
 ```sql
+SELECT 
+    AVG(productos_por_empresa) AS media_productos_por_empresa
+FROM (
+    SELECT 
+        company_id, 
+        COUNT(product_id) AS productos_por_empresa
+    FROM companyproducts
+    GROUP BY company_id
+) AS subconsulta;
 ```
 5. Contar el total de empresas por ciudad
 ```sql
+SELECT 
+    cm.name AS ciudad,
+    COUNT(*) AS total_empresas
+FROM companies c
+JOIN citiesormunicipalities cm ON c.city_id = cm.code
+GROUP BY c.city_id, cm.name
+ORDER BY total_empresas DESC;
 ```
 
 6. Calcular el promedio de precios por unidad de medida
 ```sql
+SELECT 
+    u.description AS unidad_medida,
+    AVG(cp.price) AS promedio_precio
+FROM companyproducts cp
+JOIN unitofmeasure u ON cp.unitmeasure_id = u.id
+WHERE cp.unitmeasure_id IS NOT NULL
+GROUP BY u.id, u.description
+ORDER BY promedio_precio DESC;
 ```
 
 7. Contar cuántos clientes hay por ciudad
 ```sql
+SELECT 
+    cm.name AS ciudad,
+    COUNT(*) AS total_clientes
+FROM customers cu
+JOIN citiesormunicipalities cm ON cu.city_id = cm.code
+GROUP BY cu.city_id, cm.name
+ORDER BY total_clientes DESC;
 ```
 
 8. Calcular planes de membresía por periodo
 ```sql
+SELECT 
+    p.name AS periodo,
+    COUNT(mp.membership_id) AS total_membresias
+FROM membershipperiods mp
+JOIN periods p ON mp.period_id = p.id
+GROUP BY p.id, p.name
+ORDER BY total_membresias DESC;
 ```
 
 9. Ver el promedio de calificaciones dadas por un cliente a sus favoritos
 ```sql
+SELECT 
+    cu.name AS cliente,
+    AVG(qp.rating) AS promedio_calificacion_favoritos
+FROM favorites f
+JOIN customers cu ON f.customer_id = cu.id
+JOIN details_favorites df ON f.id = df.favorite_id
+JOIN quality_products qp ON df.product_id = qp.product_id AND qp.customer_id = f.customer_id
+GROUP BY f.customer_id, cu.name;
 ```
 
 10. Consultar la fecha más reciente en que se calificó un producto
 ```sql
+SELECT 
+    p.name AS producto,
+    MAX(qp.daterating) AS fecha_ultima_calificacion
+FROM products p
+JOIN quality_products qp ON p.id = qp.product_id
+GROUP BY p.id, p.name;
 ```
 
 11. Obtener la desviación estándar de precios por categoría
 ```sql
+SELECT 
+    c.description AS categoria,
+    STDDEV(cp.price) AS desviacion_estandar_precio
+FROM companyproducts cp
+JOIN products p ON cp.product_id = p.id
+JOIN categories c ON p.category_id = c.id
+GROUP BY c.id, c.description
+ORDER BY desviacion_estandar_precio DESC;
 ```
 
 12. Contar cuántas veces un producto fue favorito
 ```sql
+SELECT 
+    p.name AS producto,
+    COUNT(df.id) AS veces_favorito
+FROM details_favorites df
+JOIN products p ON df.product_id = p.id
+GROUP BY p.id, p.name
+ORDER BY veces_favorito DESC;
 ```
 
 13. Calcular el porcentaje de productos evaluados
 ```sql
+SELECT 
+    ROUND(
+        (COUNT(DISTINCT qp.product_id) * 100.0 / 
+        (SELECT COUNT(*) FROM products)), 
+        2
+    ) AS porcentaje_evaluados
+FROM quality_products qp;
 ```
 
 14. Ver el promedio de rating por encuesta
 ```sql
+SELECT 
+	p.name AS encuesta, 
+	AVG(r.rating) AS promedio
+FROM rates AS r
+JOIN polls AS p ON r.poll_id = p.id
+GROUP BY p.name;
 ```
 
 15. Calcular el promedio y total de beneficios por plan
 ```sql
+SELECT 
+    m.name AS membresia,
+    COUNT(mb.benefit_id) AS total_beneficios,
+    AVG(b.value) AS promedio_ponderacion
+FROM 
+    membershipbenefits mb
+JOIN memberships m ON mb.membership_id = m.id
+JOIN benefits b ON mb.benefit_id = b.id
+GROUP BY m.id, m.name;
 ```
 
 16. Obtener media y varianza de precios por empresa
 ```sql
+SELECT 
+    co.name AS empresa,
+    AVG(cp.price) AS promedio_precio,
+    VARIANCE(cp.price) AS varianza_precio,
+    MIN(cp.price) AS precio_minimo,
+    MAX(cp.price) AS precio_maximo
+FROM companyproducts cp
+JOIN companies co ON cp.company_id = co.id
+GROUP BY cp.company_id, co.name;
 ```
 
 17. Ver total de productos disponibles en la ciudad del cliente
 ```sql
+SELECT 
+    cu.name AS cliente,
+    ci.name AS ciudad,
+    COUNT(DISTINCT cp.product_id) AS total_productos_disponibles
+FROM customers cu
+JOIN citiesormunicipalities ci ON cu.city_id = ci.code
+JOIN companies co ON co.city_id = cu.city_id
+JOIN companyproducts cp ON cp.company_id = co.id
+WHERE cp.is_available = TRUE
+GROUP BY cu.id, cu.name, ci.name;
 ```
 
 18. Contar productos únicos por tipo de empresa
 ```sql
+SELECT 
+    cat.description AS tipo_empresa,
+    COUNT(DISTINCT cp.product_id) AS productos_unicos
+FROM companies c
+JOIN categories cat ON c.category_id = cat.id
+JOIN companyproducts cp ON cp.company_id = c.id
+GROUP BY cat.id, cat.description;
 ```
 
 19. Ver total de clientes sin correo electrónico registrado
 ```sql
+SELECT 
+    COUNT(*) AS total_clientes_sin_email
+FROM customers
+WHERE email IS NULL;
 ```
 
 20. Empresa con más productos calificados
 ```sql
+SELECT 
+    c.name AS nombre_empresa,
+    COUNT(DISTINCT r.company_id, r.product_id) AS productos_calificados
+FROM companies c
+JOIN rates r ON r.company_id = c.id
+GROUP BY c.id, c.name
+ORDER BY productos_calificados DESC
+LIMIT 1;
 ```
 
 ## 4. Procedimientos Almacenados
 
 1.  Registrar una nueva calificación y actualizar el promedio
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_registrar_calificacion_y_actualizar_promedio (
+    IN p_product_id INT,
+    IN p_customer_id INT,
+    IN p_company_id VARCHAR(20),
+    IN p_poll_id INT,
+    IN p_rating DOUBLE
+)
+BEGIN
+    INSERT INTO rates (customer_id, company_id, poll_id, daterating, rating, created_at)
+    VALUES (p_customer_id, p_company_id, p_poll_id, NOW(), p_rating, NOW());
+
+    DECLARE v_avg_rating DOUBLE;
+
+    SELECT AVG(r.rating)
+    INTO v_avg_rating
+    FROM rates r
+    JOIN companyproducts cp ON r.company_id = cp.company_id
+    WHERE cp.product_id = p_product_id;
+
+    UPDATE products
+    SET average_rating = v_avg_rating
+    WHERE id = p_product_id;
+END$$
+
+DELIMITER ;
 ```
 
 2. Insertar empresa y asociar productos por defecto
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_insertar_empresa_y_asociar_huerfanos (
+    IN p_company_id VARCHAR(20),
+    IN p_type_id INT,
+    IN p_name VARCHAR(80),
+    IN p_category_id INT,
+    IN p_city_id VARCHAR(7),
+    IN p_audience_id INT,
+    IN p_cellphone VARCHAR(15),
+    IN p_email VARCHAR(80),
+    IN p_is_active BOOLEAN
+)
+BEGIN
+    INSERT INTO companies (id, type_id, name, category_id, city_id, audience_id, cellphone, email, is_active, updated_at)
+    VALUES (p_company_id, p_type_id, p_name, p_category_id, p_city_id, p_audience_id, p_cellphone, p_email, p_is_active, NOW());
+
+    INSERT INTO companyproducts (company_id, product_id, price, unitmeasure_id, is_available)
+    SELECT
+        p_company_id,
+        p.id,
+        p.price,   -- o precio fijo por defecto
+        1,
+        TRUE
+    FROM products p
+    LEFT JOIN companyproducts cp ON p.id = cp.product_id
+    WHERE cp.product_id IS NULL;
+END$$
+
+DELIMITER ;
 ```
 
 3. Añadir producto favorito validando duplicados
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_agregar_producto_favorito (
+    IN p_customer_id INT,
+    IN p_company_id VARCHAR(20),
+    IN p_product_id INT
+)
+BEGIN
+    DECLARE v_favorite_id INT;
+
+    SELECT id INTO v_favorite_id
+    FROM favorites
+    WHERE customer_id = p_customer_id AND company_id = p_company_id;
+
+    IF v_favorite_id IS NULL THEN
+        INSERT INTO favorites (customer_id, company_id)
+        VALUES (p_customer_id, p_company_id);
+        SET v_favorite_id = LAST_INSERT_ID();
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM details_favorites 
+        WHERE favorite_id = v_favorite_id AND product_id = p_product_id
+    ) THEN
+        INSERT INTO details_favorites (favorite_id, product_id)
+        VALUES (v_favorite_id, p_product_id);
+    END IF;
+
+END$$
+
+DELIMITER ;
 ```
 
 4. Generar resumen mensual de calificaciones por empresa
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_generar_resumen_mensual_calificaciones ()
+BEGIN
+    DECLARE v_year INT;
+    DECLARE v_month INT;
+    SET v_year = YEAR(CURDATE());
+    SET v_month = MONTH(CURDATE());
+
+    INSERT INTO resumen_calificaciones (company_id, promedio_calificacion, total_calificaciones, mes_resumen)
+    SELECT 
+        company_id,
+        AVG(rating) AS promedio,
+        COUNT(*) AS total,
+        DATE_FORMAT(CURDATE(), '%Y-%m-01') AS mes_resumen
+    FROM rates
+    WHERE 
+        YEAR(daterating) = v_year
+        AND MONTH(daterating) = v_month
+    GROUP BY company_id;
+
+END$$
+
+DELIMITER ;
 ```
 
 5. Calcular beneficios activos por membresía
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_beneficios_activos_membresia ()
+BEGIN
+    SELECT 
+        mb.membership_id,
+        mb.period_id,
+        mb.benefit_id,
+        b.description AS beneficio,
+        mp.start_date,
+        mp.end_date,
+        b.is_active
+    FROM 
+        membershipbenefits mb
+        INNER JOIN membershipperiods mp ON mb.membership_id = mp.membership_id AND mb.period_id = mp.period_id
+        INNER JOIN benefits b ON mb.benefit_id = b.id
+    WHERE 
+        mp.start_date <= CURDATE()
+        AND mp.end_date >= CURDATE()
+        AND b.is_active = TRUE;
+END$$
+
+DELIMITER ;
 ```
 
 6. Eliminar productos huérfanos
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_eliminar_productos_huerfanos ()
+BEGIN
+    DELETE FROM products
+    WHERE id IN (
+        SELECT p.id
+        FROM (
+            SELECT p.id
+            FROM products p
+            LEFT JOIN rates r ON p.id = r.product_id
+            LEFT JOIN companyproducts cp ON p.id = cp.product_id
+            WHERE r.product_id IS NULL AND cp.product_id IS NULL
+        ) AS subconsulta
+    );
+END$$
+
+DELIMITER ;
 ```
 
 7. Actualizar precios de productos por categoría
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_actualizar_precios_categoria (
+    IN p_categoria_id INT,
+    IN p_factor DECIMAL(5,2)
+)
+BEGIN
+    UPDATE companyproducts cp
+    JOIN products p ON cp.product_id = p.id
+    SET cp.price = cp.price * p_factor
+    WHERE p.category_id = p_categoria_id;
+END$$
+
+DELIMITER ;
 ```
 
 8. Validar inconsistencia entre rates y quality_products
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_validar_inconsistencias_rates_quality ()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE v_customer_id INT;
+    DECLARE v_company_id VARCHAR(20);
+    DECLARE v_poll_id INT;
+    DECLARE v_desc TEXT;
+    DECLARE cur CURSOR FOR 
+        SELECT r.customer_id, r.company_id, r.poll_id
+        FROM rates r
+        LEFT JOIN quality_products qp 
+            ON r.customer_id = qp.customer_id 
+            AND r.company_id = qp.company_id 
+            AND r.poll_id = qp.poll_id
+        WHERE qp.poll_id IS NULL;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO v_customer_id, v_company_id, v_poll_id;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET v_desc = CONCAT(
+            'Inconsistencia: rates sin quality_products → customer_id=', 
+            v_customer_id, ', company_id=', v_company_id, ', poll_id=', v_poll_id
+        );
+
+        INSERT INTO errores_log (tipo_error, descripcion, fecha)
+        VALUES ('INCONSISTENCIA_RATES_QP', v_desc, NOW());
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
 ```
 
 9. Asignar beneficios a nuevas audiencias
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_asignar_beneficio_audiencia (
+    IN p_benefit_id INT,
+    IN p_audience_id INT
+)
+BEGIN
+    DECLARE total INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO total
+    FROM audiencebenefits
+    WHERE benefit_id = p_benefit_id AND audience_id = p_audience_id;
+
+    IF total = 0 THEN
+        INSERT INTO audiencebenefits (audience_id, benefit_id)
+        VALUES (p_audience_id, p_benefit_id);
+    END IF;
+END$$
+
+DELIMITER ;
 ```
 
 10. Activar planes de membresía vencidos con pago confirmado
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_activar_membresias_vencidas ()
+BEGIN
+    UPDATE membershipperiods
+    SET status = 'ACTIVA'
+    WHERE end_date < CURDATE()
+      AND pago_confirmado = TRUE
+      AND status <> 'ACTIVA';
+END$$
+
+DELIMITER ;
 ```
 
 11. Listar productos favoritos del cliente con su calificación
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_listar_favoritos_con_rating (
+  IN p_customer_id INT
+)
+BEGIN
+  SELECT 
+    df.product_id,
+    p.name AS nombre_producto,
+    IFNULL(AVG(r.rating), 0) AS promedio_rating
+  FROM favorites f
+  JOIN details_favorites df ON df.favorite_id = f.id
+  JOIN products p ON p.id = df.product_id
+  LEFT JOIN rates r 
+    ON r.customer_id = f.customer_id 
+   AND r.company_id = f.company_id 
+   AND r.poll_id IN (
+      SELECT poll_id 
+      FROM quality_products 
+      WHERE product_id = df.product_id AND customer_id = f.customer_id
+   )
+  WHERE f.customer_id = p_customer_id
+  GROUP BY df.product_id, p.name;
+END$$
+
+DELIMITER ;
 ```
 
 12. Registrar encuesta y sus preguntas asociadas
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_registrar_encuesta_y_preguntas (
+  IN p_name VARCHAR(80),
+  IN p_description TEXT,
+  IN p_isactive BOOLEAN,
+  IN p_categorypoll_id INT,
+  IN p_questions TEXT
+)
+BEGIN
+  DECLARE v_poll_id INT;
+  DECLARE v_question TEXT;
+  DECLARE delim CHAR(1) DEFAULT ';';
+
+  INSERT INTO polls (name, description, isactive, categorypoll_id)
+  VALUES (p_name, p_description, p_isactive, p_categorypoll_id);
+
+  SET v_poll_id = LAST_INSERT_ID();
+
+  DECLARE v_pos INT DEFAULT 1;
+  DECLARE v_len INT;
+
+  SET v_len = LENGTH(p_questions);
+
+  WHILE v_pos > 0 DO
+    SET v_pos = LOCATE(delim, p_questions);
+
+    IF v_pos > 0 THEN
+      SET v_question = TRIM(SUBSTRING(p_questions, 1, v_pos - 1));
+      SET p_questions = SUBSTRING(p_questions, v_pos + 1);
+    ELSE
+      SET v_question = TRIM(p_questions);
+    END IF;
+
+    IF v_question != '' THEN
+      INSERT INTO poll_questions (poll_id, question_text)
+      VALUES (v_poll_id, v_question);
+    END IF;
+  END WHILE;
+
+END$$
+
+DELIMITER ;
 ```
 
 13. Eliminar favoritos antiguos sin calificaciones
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_eliminar_favoritos_antiguos_sin_calificacion ()
+BEGIN
+  DELETE df
+  FROM details_favorites df
+  JOIN favorites f ON f.id = df.favorite_id
+  LEFT JOIN rates r 
+    ON r.customer_id = f.customer_id
+   AND r.company_id = f.company_id
+   AND r.poll_id IN (
+      SELECT poll_id 
+      FROM quality_products 
+      WHERE product_id = df.product_id AND customer_id = f.customer_id
+   )
+  WHERE r.customer_id IS NULL
+    AND df.fecha_agregado < DATE_SUB(NOW(), INTERVAL 1 YEAR);
+END$$
+
+DELIMITER ;
 ```
 
 14. Asociar beneficios automáticamente por audiencia
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_asociar_beneficios_por_audiencia (
+  IN p_audience_id INT
+)
+BEGIN
+  INSERT INTO audiencebenefits (audience_id, benefit_id)
+  SELECT 
+    p_audience_id, b.id
+  FROM benefits b
+  WHERE b.is_active = TRUE
+    AND NOT EXISTS (
+      SELECT 1 
+      FROM audiencebenefits ab 
+      WHERE ab.audience_id = p_audience_id AND ab.benefit_id = b.id
+    );
+END$$
+
+DELIMITER ;
 ```
 
 15. Historial de cambios de precio
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_actualizar_precio_y_guardar_historial (
+  IN p_company_id VARCHAR(20),
+  IN p_product_id INT,
+  IN p_nuevo_precio DOUBLE
+)
+BEGIN
+  DECLARE v_precio_anterior DOUBLE;
+
+  SELECT price INTO v_precio_anterior
+  FROM companyproducts
+  WHERE company_id = p_company_id AND product_id = p_product_id;
+
+  IF v_precio_anterior IS NOT NULL AND v_precio_anterior <> p_nuevo_precio THEN
+
+    UPDATE companyproducts
+    SET price = p_nuevo_precio
+    WHERE company_id = p_company_id AND product_id = p_product_id;
+
+    INSERT INTO historial_precios (
+      company_id, product_id, precio_anterior, precio_nuevo
+    ) VALUES (
+      p_company_id, p_product_id, v_precio_anterior, p_nuevo_precio
+    );
+
+  END IF;
+
+END$$
+
+DELIMITER ;
 ```
 
 16. Registrar encuesta activa automáticamente
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_registrar_encuesta_activa (
+  IN p_name VARCHAR(80),
+  IN p_description TEXT,
+  IN p_categorypoll_id INT
+)
+BEGIN
+  INSERT INTO polls (name, description, isactive, categorypoll_id, created_at)
+  VALUES (p_name, p_description, TRUE, p_categorypoll_id, NOW());
+END$$
+
+DELIMITER ;
 ```
 
 17. Actualizar unidad de medida de productos sin afectar ventas
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_actualizar_unitmeasure_sin_ventas (
+  IN p_product_id INT,
+  IN p_new_unit_id INT
+)
+BEGIN
+  DECLARE v_count INT;
+
+  SELECT COUNT(*) INTO v_count
+  FROM order_details
+  WHERE product_id = p_product_id;
+
+  IF v_count = 0 THEN
+    UPDATE companyproducts
+    SET unitmeasure_id = p_new_unit_id
+    WHERE product_id = p_product_id;
+
+    SELECT 'Unidad de medida actualizada correctamente.' AS mensaje;
+  ELSE
+    SELECT 'No se puede actualizar: el producto tiene ventas registradas.' AS mensaje;
+  END IF;
+
+END$$
+
+DELIMITER ;
 ```
 
 18. Recalcular promedios de calidad semanalmente
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_recalcular_promedios_calidad ()
+BEGIN
+  UPDATE products p
+  SET p.average_rating = (
+    SELECT IFNULL(AVG(qp.rating), 0)
+    FROM quality_products qp
+    WHERE qp.product_id = p.id
+  );
+END$$
+
+DELIMITER ;
 ```
 
 19. Validar claves foráneas entre calificaciones y encuestas
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_validar_fk_rates_polls ()
+BEGIN
+  DECLARE done INT DEFAULT 0;
+  DECLARE v_customer_id INT;
+  DECLARE v_company_id VARCHAR(20);
+  DECLARE v_poll_id INT;
+  DECLARE v_desc TEXT;
+
+  DECLARE cur CURSOR FOR
+    SELECT r.customer_id, r.company_id, r.poll_id
+    FROM rates r
+    LEFT JOIN polls p ON r.poll_id = p.id
+    WHERE p.id IS NULL;
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+  OPEN cur;
+
+  read_loop: LOOP
+    FETCH cur INTO v_customer_id, v_company_id, v_poll_id;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+
+    SET v_desc = CONCAT(
+      'Inconsistencia: rates con poll_id inexistente → customer_id=',
+      v_customer_id, ', company_id=', v_company_id, ', poll_id=', v_poll_id
+    );
+
+    INSERT INTO errores_log (tipo_error, descripcion, fecha)
+    VALUES ('FK_RATES_POLLS', v_desc, NOW());
+  END LOOP;
+
+  CLOSE cur;
+
+END$$
+
+DELIMITER ;
 ```
 
 20. Generar el top 10 de productos más calificados por ciudad
 ```sql
+DELIMITER $$
+
+CREATE PROCEDURE sp_top10_productos_mas_calificados_por_ciudad ()
+BEGIN
+  SELECT *
+  FROM (
+    SELECT
+      c.city_id,
+      cp.product_id,
+      COUNT(*) AS total_calificaciones,
+      ROW_NUMBER() OVER (PARTITION BY c.city_id ORDER BY COUNT(*) DESC) AS ranking
+    FROM
+      rates r
+      JOIN companies c ON r.company_id = c.id
+      JOIN companyproducts cp ON cp.company_id = c.id
+    WHERE
+      cp.product_id IS NOT NULL
+    GROUP BY
+      c.city_id, cp.product_id
+  ) ranked
+  WHERE ranked.ranking <= 10;
+END$$
+
+DELIMITER ;
 ```
 
 ## 5. Triggers
@@ -2102,80 +2746,564 @@ JOIN customers cu ON qp.customer_id = cu.id;
 
 1. Como analista, quiero una función que calcule el promedio ponderado de calidad de un producto basado en sus calificaciones y fecha de evaluación.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION calcular_promedio_ponderado(p_product_id INT)
+RETURNS DOUBLE
+DETERMINISTIC
+BEGIN
+  DECLARE promedio DOUBLE DEFAULT 0;
+
+  SELECT 
+    IFNULL(
+      SUM(rating * (1 / (DATEDIFF(NOW(), daterating) + 1))) / 
+      SUM(1 / (DATEDIFF(NOW(), daterating) + 1)),
+    0)
+  INTO promedio
+  FROM quality_products
+  WHERE product_id = p_product_id;
+
+  RETURN promedio;
+END$$
+
+DELIMITER ;
 ```
 
 2. Como auditor, deseo una función que determine si un producto ha sido calificado recientemente (últimos 30 días).
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION es_calificacion_reciente(p_fecha DATETIME)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  RETURN p_fecha >= (NOW() - INTERVAL 30 DAY);
+END$$
+
+DELIMITER ;
 ```
 
 3. Como desarrollador, quiero una función que reciba un product_id y devuelva el nombre completo de la empresa que lo vende.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION obtener_empresa_producto(p_product_id INT)
+RETURNS VARCHAR(255)
+DETERMINISTIC
+BEGIN
+  DECLARE v_nombre_empresa VARCHAR(255);
+
+  SELECT c.name
+  INTO v_nombre_empresa
+  FROM companyproducts cp
+  JOIN companies c ON cp.company_id = c.id
+  WHERE cp.product_id = p_product_id
+  LIMIT 1;
+
+  RETURN v_nombre_empresa;
+END$$
+
+DELIMITER ;
 ```
 
 4. Como operador, deseo una función que, dado un customer_id, me indique si el cliente tiene una membresía activa.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION tiene_membresia_activa(p_customer_id INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_count INT;
+
+  SELECT COUNT(*)
+  INTO v_count
+  FROM membershipperiods mp
+  JOIN customers_memberships cm ON cm.membership_id = mp.membership_id
+  WHERE cm.customer_id = p_customer_id
+    AND CURDATE() BETWEEN mp.start_date AND mp.end_date
+    AND mp.status = 'ACTIVA';
+
+  RETURN v_count > 0;
+END$$
+
+DELIMITER ;
 ```
 
 5. Como administrador, quiero una función que valide si una ciudad tiene más de X empresas registradas, recibiendo la ciudad y el número como parámetros.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION ciudad_supera_empresas(p_city_id VARCHAR(7), p_limite INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_total INT;
+
+  SELECT COUNT(*)
+  INTO v_total
+  FROM companies
+  WHERE city_id = p_city_id;
+
+  RETURN v_total > p_limite;
+END$$
+
+DELIMITER ;
 ```
 
 6. Como gerente, deseo una función que, dado un rate_id, me devuelva una descripción textual de la calificación (por ejemplo, “Muy bueno”, “Regular”).
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION descripcion_calificacion(p_valor DOUBLE)
+RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+  DECLARE v_desc VARCHAR(50);
+
+  SET v_desc = CASE
+    WHEN p_valor = 5 THEN 'Excelente'
+    WHEN p_valor = 4 THEN 'Muy bueno'
+    WHEN p_valor = 3 THEN 'Bueno'
+    WHEN p_valor = 2 THEN 'Regular'
+    WHEN p_valor = 1 THEN 'Malo'
+    ELSE 'Sin calificar'
+  END;
+
+  RETURN v_desc;
+END$$
+
+DELIMITER ;
 ```
 
 7. Como técnico, quiero una función que devuelva el estado de un producto en función de su evaluación (ej. “Aceptable”, “Crítico”).
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION estado_producto(p_product_id INT)
+RETURNS VARCHAR(20)
+DETERMINISTIC
+BEGIN
+  DECLARE v_avg DOUBLE;
+  DECLARE v_estado VARCHAR(20);
+
+  SELECT AVG(rating)
+  INTO v_avg
+  FROM rates
+  WHERE customer_id IS NOT NULL
+    AND poll_id IS NOT NULL
+    AND EXISTS (
+      SELECT 1
+      FROM companyproducts cp
+      WHERE cp.product_id = p_product_id
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM products p
+      WHERE p.id = p_product_id
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM quality_products qp
+      WHERE qp.product_id = p_product_id
+    )
+    AND product_id = p_product_id;
+
+  SET v_estado = CASE
+    WHEN v_avg IS NULL THEN 'Sin datos'
+    WHEN v_avg < 2.5 THEN 'Crítico'
+    WHEN v_avg >= 2.5 AND v_avg < 4 THEN 'Aceptable'
+    ELSE 'Óptimo'
+  END;
+
+  RETURN v_estado;
+END$$
+
+DELIMITER ;
 ```
 
 8. Como cliente, deseo una función que indique si un producto está entre mis favoritos, recibiendo el product_id y mi customer_id.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION es_favorito(p_customer_id INT, p_product_id INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_count INT;
+
+  SELECT COUNT(*)
+  INTO v_count
+  FROM favorites f
+  JOIN details_favorites df ON df.favorite_id = f.id
+  WHERE f.customer_id = p_customer_id
+    AND df.product_id = p_product_id;
+
+  RETURN v_count > 0;
+END$$
+
+DELIMITER ;
 ```
 
 9. Como gestor de beneficios, quiero una función que determine si un beneficio está asignado a una audiencia específica, retornando verdadero o falso.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION beneficio_asignado_audiencia(p_benefit_id INT, p_audience_id INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_count INT;
+
+  SELECT COUNT(*)
+  INTO v_count
+  FROM audiencebenefits
+  WHERE benefit_id = p_benefit_id
+    AND audience_id = p_audience_id;
+
+  RETURN v_count > 0;
+END$$
+
+DELIMITER ;
 ```
 
 10. Como auditor, deseo una función que reciba una fecha y determine si se encuentra dentro de un rango de membresía activa.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION fecha_en_membresia(p_fecha DATE, p_customer_id INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_count INT;
+
+  SELECT COUNT(*)
+  INTO v_count
+  FROM membershipperiods mp
+  JOIN customers_memberships cm ON cm.membership_id = mp.membership_id
+  WHERE cm.customer_id = p_customer_id
+    AND p_fecha BETWEEN mp.start_date AND mp.end_date
+    AND mp.status = 'ACTIVA';
+
+  RETURN v_count > 0;
+END$$
+
+DELIMITER ;
 ```
 
 11. Como desarrollador, quiero una función que calcule el porcentaje de calificaciones positivas de un producto respecto al total.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION porcentaje_positivas(p_product_id INT)
+RETURNS DECIMAL(5,2)
+DETERMINISTIC
+BEGIN
+  DECLARE total INT DEFAULT 0;
+  DECLARE positivas INT DEFAULT 0;
+  DECLARE resultado DECIMAL(5,2);
+
+  SELECT COUNT(*) INTO total
+  FROM rates
+  WHERE poll_id IN (
+    SELECT poll_id FROM quality_products
+    WHERE product_id = p_product_id
+  );
+
+  SELECT COUNT(*) INTO positivas
+  FROM rates
+  WHERE poll_id IN (
+    SELECT poll_id FROM quality_products
+    WHERE product_id = p_product_id
+  )
+  AND rating >= 4;
+
+  IF total = 0 THEN
+    SET resultado = 0;
+  ELSE
+    SET resultado = (positivas * 100.0) / total;
+  END IF;
+
+  RETURN resultado;
+END$$
+
+DELIMITER ;
 ```
 
 12. Como supervisor, deseo una función que calcule la edad de una calificación, en días, desde la fecha actual.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION edad_calificacion(
+  p_customer_id INT,
+  p_company_id VARCHAR(20),
+  p_poll_id INT
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE v_dias INT DEFAULT NULL;
+  DECLARE v_fecha DATETIME;
+
+  SELECT created_at INTO v_fecha
+  FROM rates
+  WHERE customer_id = p_customer_id
+    AND company_id = p_company_id
+    AND poll_id = p_poll_id
+  LIMIT 1;
+
+  IF v_fecha IS NOT NULL THEN
+    SET v_dias = DATEDIFF(CURRENT_DATE, v_fecha);
+  ELSE
+    SET v_dias = NULL; -- o 0, si prefieres
+  END IF;
+
+  RETURN v_dias;
+END$$
+
+DELIMITER ;
 ```
 
 13. Como operador, quiero una función que, dado un company_id, devuelva la cantidad de productos únicos asociados a esa empresa.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION productos_por_empresa(p_company_id VARCHAR(20))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE v_total INT DEFAULT 0;
+
+  SELECT COUNT(DISTINCT product_id)
+  INTO v_total
+  FROM companyproducts
+  WHERE company_id = p_company_id;
+
+  RETURN v_total;
+END$$
+
+DELIMITER ;
 ```
 
 14. Como gerente, deseo una función que retorne el nivel de actividad de un cliente (frecuente, esporádico, inactivo), según su número de calificaciones.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION nivel_actividad_cliente(p_customer_id INT)
+RETURNS VARCHAR(20)
+DETERMINISTIC
+BEGIN
+  DECLARE v_count INT DEFAULT 0;
+  DECLARE v_nivel VARCHAR(20);
+
+  SELECT COUNT(*)
+  INTO v_count
+  FROM rates
+  WHERE customer_id = p_customer_id;
+
+  IF v_count >= 10 THEN
+    SET v_nivel = 'Frecuente';
+  ELSEIF v_count >= 1 THEN
+    SET v_nivel = 'Esporádico';
+  ELSE
+    SET v_nivel = 'Inactivo';
+  END IF;
+
+  RETURN v_nivel;
+END$$
+
+DELIMITER ;
 ```
 
 15. Como administrador, quiero una función que calcule el precio promedio ponderado de un producto, tomando en cuenta su uso en favoritos.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION precio_promedio_ponderado(p_product_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+  DECLARE v_total_favoritos INT DEFAULT 0;
+  DECLARE v_suma_ponderada DECIMAL(20,2) DEFAULT 0;
+  DECLARE v_precio_promedio DECIMAL(10,2);
+
+  SELECT COUNT(*)
+  INTO v_total_favoritos
+  FROM details_favorites
+  WHERE product_id = p_product_id;
+
+  IF v_total_favoritos = 0 THEN
+    SELECT AVG(price) INTO v_precio_promedio
+    FROM companyproducts
+    WHERE product_id = p_product_id;
+  ELSE
+    SELECT SUM(cp.price * fav_count.cant)
+    INTO v_suma_ponderada
+    FROM companyproducts cp
+    JOIN (
+      SELECT product_id, COUNT(*) AS cant
+      FROM details_favorites
+      WHERE product_id = p_product_id
+      GROUP BY product_id
+    ) fav_count ON cp.product_id = fav_count.product_id;
+
+    SET v_precio_promedio = v_suma_ponderada / v_total_favoritos;
+  END IF;
+
+  RETURN ROUND(v_precio_promedio, 2);
+END$$
+
+DELIMITER ;
 ```
 
 16. Como técnico, deseo una función que me indique si un benefit_id está asignado a más de una audiencia o membresía (valor booleano).
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION beneficio_asignado_multiple(p_benefit_id INT)
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_audiencias INT DEFAULT 0;
+  DECLARE v_membresias INT DEFAULT 0;
+
+  SELECT COUNT(DISTINCT audience_id)
+  INTO v_audiencias
+  FROM audiencebenefits
+  WHERE benefit_id = p_benefit_id;
+
+  SELECT COUNT(DISTINCT membership_id)
+  INTO v_membresias
+  FROM membershipbenefits
+  WHERE benefit_id = p_benefit_id;
+
+  IF v_audiencias > 1 OR v_membresias > 1 THEN
+    RETURN TRUE;
+  ELSE
+    RETURN FALSE;
+  END IF;
+END$$
+
+DELIMITER ;
 ```
 
 17. Como cliente, quiero una función que, dada mi ciudad, retorne un índice de variedad basado en número de empresas y productos.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION indice_variedad_ciudad(p_city_id VARCHAR(7))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+  DECLARE v_empresas INT DEFAULT 0;
+  DECLARE v_productos INT DEFAULT 0;
+  DECLARE v_indice DECIMAL(10,2);
+
+  SELECT COUNT(*)
+  INTO v_empresas
+  FROM companies
+  WHERE city_id = p_city_id;
+
+  SELECT COUNT(DISTINCT cp.product_id)
+  INTO v_productos
+  FROM companyproducts cp
+  JOIN companies c ON c.id = cp.company_id
+  WHERE c.city_id = p_city_id;
+
+  SET v_indice = (v_empresas + v_productos) / 2;
+
+  RETURN ROUND(v_indice, 2);
+END$$
+
+DELIMITER ;
 ```
 
 18. Como gestor de calidad, deseo una función que evalúe si un producto debe ser desactivado por tener baja calificación histórica.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION producto_baja_calificacion(p_product_id INT, p_umbral DECIMAL(3,2))
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+  DECLARE v_promedio DECIMAL(3,2);
+
+  SELECT AVG(r.rating)
+  INTO v_promedio
+  FROM rates r
+  JOIN companyproducts cp ON cp.product_id = p_product_id AND cp.company_id = r.company_id
+  WHERE r.poll_id IS NOT NULL -- opcional: filtrar por encuesta válida
+
+  GROUP BY r.product_id;
+
+  IF v_promedio IS NULL THEN
+    RETURN FALSE;
+  END IF;
+
+  RETURN v_promedio < p_umbral;
+END$$
+
+DELIMITER ;
 ```
 
 19. Como desarrollador, quiero una función que calcule el índice de popularidad de un producto (combinando favoritos y ratings).
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION indice_popularidad_producto(p_product_id INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+  DECLARE v_fav_count INT DEFAULT 0;
+  DECLARE v_rating_avg DECIMAL(3,2) DEFAULT 0.0;
+  DECLARE v_popularity DECIMAL(10,2);
+
+  -- Contar veces que fue favorito
+  SELECT COUNT(*)
+  INTO v_fav_count
+  FROM details_favorites
+  WHERE product_id = p_product_id;
+
+  -- Promedio de calificaciones
+  SELECT AVG(r.rating)
+  INTO v_rating_avg
+  FROM rates r
+  JOIN companyproducts cp ON r.company_id = cp.company_id AND r.poll_id = r.poll_id
+  WHERE cp.product_id = p_product_id;
+
+  SET v_popularity = (0.4 * LEAST(v_fav_count / 100, 1)) + (0.6 * (v_rating_avg / 5));
+
+  RETURN ROUND(v_popularity * 100, 2); -- escala 0 a 100
+END$$
+
+DELIMITER ;
 ```
 
 20. Como auditor, deseo una función que genere un código único basado en el nombre del producto y su fecha de creación.
 ```sql
+DELIMITER $$
+
+CREATE FUNCTION generar_codigo_unico(producto_id INT)
+RETURNS VARCHAR(64)
+DETERMINISTIC
+BEGIN
+  DECLARE v_nombre VARCHAR(60);
+  DECLARE v_fecha DATE;
+  DECLARE v_codigo VARCHAR(64);
+
+  SELECT name, created_at
+  INTO v_nombre, v_fecha
+  FROM products
+  WHERE id = producto_id;
+
+  SET @fecha_str = DATE_FORMAT(v_fecha, '%Y%m%d');
+
+  SET @base_str = CONCAT(v_nombre, '_', @fecha_str);
+
+  SET v_codigo = MD5(@base_str);
+
+  RETURN v_codigo;
+END$$
+
+DELIMITER ;
 ```
