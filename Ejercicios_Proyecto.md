@@ -28,7 +28,7 @@ WHERE (cp.product_id, em.city_id, cp.price) IN (
 ```sql
 SELECT 
     cu.name AS cliente,
-    .email AS Correo,
+    cu.email AS Correo,
     COUNT(qp.product_id) AS ProdCalificados
 FROM quality_products qp
 JOIN customers cu ON qp.customer_id = cu.id
@@ -102,12 +102,12 @@ WHERE c.is_active = TRUE;
 
 8. Como especialista en marketing, deseo obtener los 10 productos más calificados en cada ciudad.
 ```sql
-SELECT 
+SELECT
     sub.ciudad,
     sub.producto,
     sub.promedio_calificacion
 FROM (
-    SELECT 
+    SELECT
         ci.name AS ciudad,
         p.name AS producto,
         AVG(qp.rating) AS promedio_calificacion
@@ -118,9 +118,9 @@ FROM (
     GROUP BY ci.name, p.id, p.name
 ) AS sub
 WHERE (
-    SELECT COUNT(qp2.product_id)
+    SELECT COUNT(*)
     FROM (
-        SELECT 
+        SELECT
             qp2.product_id,
             AVG(qp2.rating) AS promedio
         FROM quality_products qp2
@@ -819,13 +819,13 @@ WHERE email IS NULL;
 
 20. Empresa con más productos calificados
 ```sql
-SELECT 
-    c.name AS nombre_empresa,
-    COUNT(DISTINCT r.company_id, r.product_id) AS productos_calificados
-FROM companies c
-JOIN rates r ON r.company_id = c.id
+SELECT
+    c.name AS empresa,
+    COUNT(DISTINCT qp.product_id) AS total_productos_calificados
+FROM quality_products qp
+JOIN companies c ON qp.company_id = c.id
 GROUP BY c.id, c.name
-ORDER BY productos_calificados DESC
+ORDER BY total_productos_calificados DESC
 LIMIT 1;
 ```
 
@@ -843,16 +843,18 @@ CREATE PROCEDURE sp_registrar_calificacion_y_actualizar_promedio (
     IN p_rating DOUBLE
 )
 BEGIN
-    INSERT INTO rates (customer_id, company_id, poll_id, daterating, rating, created_at)
-    VALUES (p_customer_id, p_company_id, p_poll_id, NOW(), p_rating, NOW());
-
     DECLARE v_avg_rating DOUBLE;
 
-    SELECT AVG(r.rating)
+    INSERT INTO quality_products (
+        product_id, customer_id, poll_id, company_id, daterating, rating
+    ) VALUES (
+        p_product_id, p_customer_id, p_poll_id, p_company_id, NOW(), p_rating
+    );
+
+    SELECT AVG(rating)
     INTO v_avg_rating
-    FROM rates r
-    JOIN companyproducts cp ON r.company_id = cp.company_id
-    WHERE cp.product_id = p_product_id;
+    FROM quality_products
+    WHERE product_id = p_product_id;
 
     UPDATE products
     SET average_rating = v_avg_rating
@@ -1157,18 +1159,15 @@ BEGIN
   DECLARE v_poll_id INT;
   DECLARE v_question TEXT;
   DECLARE delim CHAR(1) DEFAULT ';';
+  DECLARE v_pos INT DEFAULT 1;
+  DECLARE v_len INT;
 
   INSERT INTO polls (name, description, isactive, categorypoll_id)
   VALUES (p_name, p_description, p_isactive, p_categorypoll_id);
 
   SET v_poll_id = LAST_INSERT_ID();
 
-  DECLARE v_pos INT DEFAULT 1;
-  DECLARE v_len INT;
-
-  SET v_len = LENGTH(p_questions);
-
-  WHILE v_pos > 0 DO
+  WHILE LENGTH(p_questions) > 0 DO
     SET v_pos = LOCATE(delim, p_questions);
 
     IF v_pos > 0 THEN
@@ -1176,6 +1175,7 @@ BEGIN
       SET p_questions = SUBSTRING(p_questions, v_pos + 1);
     ELSE
       SET v_question = TRIM(p_questions);
+      SET p_questions = '';
     END IF;
 
     IF v_question != '' THEN
